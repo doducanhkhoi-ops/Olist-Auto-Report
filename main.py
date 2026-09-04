@@ -84,11 +84,19 @@ def send_email(html_content):
     server.quit()
     print("Email sent successfully!", flush=True)
 if __name__ == "__main__":
-    try:
-        report = generate_report()
-        send_email(report)
-        print("Done!", flush=True)
-    except Exception as e:
-        print("CRITICAL ERROR ENCOUNTERED:", flush=True)
-        traceback.print_exc()
-        sys.exit(1)
+    import time
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            report = generate_report()
+            send_email(report)
+            print("Done!", flush=True)
+            break # Thành công thì thoát vòng lặp
+        except Exception as e:
+            print(f"CRITICAL ERROR ENCOUNTERED: {e}", flush=True)
+            if "503" in str(e) or "UNAVAILABLE" in str(e):
+                print(f"Máy chủ Google đang bận. Đợi 15 giây rồi thử lại (Lần {attempt+1}/{max_retries})...", flush=True)
+                time.sleep(15)
+            else:
+                traceback.print_exc()
+                sys.exit(1) # Lỗi khác thì báo đỏ
