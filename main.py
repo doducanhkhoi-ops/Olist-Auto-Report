@@ -51,7 +51,7 @@ def generate_report():
     
     # Kích hoạt tính năng Automatic Function Calling để AI tự động đàm thoại với công cụ
     chat = client.chats.create(
-        model='gemini-3.6-flash',
+        model='gemini-3.7-flash',
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
             tools=[execute_sql],
