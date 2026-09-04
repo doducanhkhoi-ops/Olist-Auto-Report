@@ -20,7 +20,7 @@ def get_data_from_db():
     
     query = """
     SELECT r.review_score, r.review_comment_message, p.product_category_name, i.price, i.freight_value
-    FROM order_reviews r
+    FROM reviews r
     JOIN order_items i ON r.order_id = i.order_id
     JOIN products p ON i.product_id = p.product_id
     WHERE r.review_score IN (1, 2) AND r.review_comment_message IS NOT NULL
