@@ -23,7 +23,7 @@ def execute_sql(query: str) -> str:
         data = cursor.fetchall()
         conn.close()
         # Giới hạn số lượng ký tự trả về để AI không bị ngộp dữ liệu
-        return str(data)[:8000]
+        return str(data)[:4000]
     except Exception as e:
         return f"Lỗi truy vấn SQL: {e}"
 def generate_report():
@@ -51,7 +51,7 @@ def generate_report():
     
     # Kích hoạt tính năng Automatic Function Calling để AI tự động đàm thoại với công cụ
     chat = client.chats.create(
-        model='gemini-3.7-flash',
+        model='gemini-3.5-flash-lite'
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
             tools=[execute_sql],
