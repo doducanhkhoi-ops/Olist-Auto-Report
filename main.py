@@ -151,8 +151,10 @@ def generate_report():
        </div>
     </div>
     
-    BẮT BUỘC KÈM THEO MEMORY:
-    Ở DƯỚI CÙNG của báo cáo (nằm ngoài giao diện Dashboard), viết một tóm tắt ngắn (2-3 câu) đặt trong thẻ <ai_memory>...</ai_memory>.
+    YÊU CẦU DỮ LIỆU ẨN (BẮT BUỘC):
+    Bạn phải đặt 2 thẻ sau ở cuối cùng câu trả lời (Nằm ngoài khung HTML phía trên):
+    1. <email_subject>[Tiêu đề Email ngắn gọn, hấp dẫn, phản ánh đúng trọng tâm báo cáo này (Ví dụ: Phân tích nguyên nhân SP Giường Ngủ bị rate 1 sao)]</email_subject>
+    2. <ai_memory>[Tóm tắt kết luận ngắn 2-3 câu để làm vốn cho lần chạy sau]</ai_memory>
     """
     
     chat = client.chats.create(
@@ -164,9 +166,17 @@ def generate_report():
         )
     )
     
-    response = chat.send_message("Hãy thực hiện nhiệm vụ phân tích sâu của bạn, xuất HTML báo cáo và kèm theo <ai_memory>.")
+    response = chat.send_message("Hãy thực hiện nhiệm vụ phân tích sâu của bạn, xuất HTML báo cáo và kèm theo <email_subject> và <ai_memory>.")
     text = response.text
     
+    # Tách Tiêu đề Email
+    subject = "📊 [AI Agent PRO] Báo Cáo Phân Tích"
+    subject_match = re.search(r'<email_subject>(.*?)</email_subject>', text, re.DOTALL)
+    if subject_match:
+        subject = subject_match.group(1).strip()
+        text = re.sub(r'<email_subject>.*?</email_subject>', '', text, flags=re.DOTALL)
+    
+    # Tách Memory
     memory_match = re.search(r'<ai_memory>(.*?)</ai_memory>', text, re.DOTALL)
     if memory_match:
         new_memory = memory_match.group(1).strip()
@@ -174,14 +184,14 @@ def generate_report():
         get_and_update_memory(new_memory)
         text = re.sub(r'<ai_memory>.*?</ai_memory>', '', text, flags=re.DOTALL)
         
-    return text.strip()
+    return subject, text.strip()
 
-def send_email(html_content):
-    print("Đang đóng gói Email...", flush=True)
+def send_email(subject, html_content):
+    print(f"Đang đóng gói Email với tiêu đề: {subject}", flush=True)
     msg = MIMEMultipart()
     msg['From'] = os.environ['EMAIL_USER']
     msg['To'] = os.environ['EMAIL_USER']
-    msg['Subject'] = "📊 [AI Agent PRO] Báo Cáo Phân Tích Chuyên Sâu"
+    msg['Subject'] = f"📊 {subject}"
     
     if html_content.startswith("```html"):
         html_content = html_content[7:]
@@ -202,8 +212,8 @@ if __name__ == "__main__":
     max_retries = 5
     for attempt in range(max_retries):
         try:
-            report = generate_report()
-            send_email(report)
+            subject, report = generate_report()
+            send_email(subject, report)
             print("Done!", flush=True)
             sys.exit(0)
         except Exception as e:
