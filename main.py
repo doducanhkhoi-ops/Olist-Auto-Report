@@ -87,7 +87,7 @@ def generate_report():
     """
     
     chat = client.chats.create(
-        model='gemini-3.7-flash',
+        model='gemini-3.5-flash-lite',
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
             tools=[execute_sql],
@@ -136,13 +136,17 @@ if __name__ == "__main__":
             report = generate_report()
             send_email(report)
             print("Done!", flush=True)
-            break
+            sys.exit(0)
         except Exception as e:
             print(f"CRITICAL ERROR ENCOUNTERED: {e}", flush=True)
             error_str = str(e)
             if "503" in error_str or "UNAVAILABLE" in error_str or "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                print(f"Google đang giới hạn tốc độ. Nghỉ 30 giây rồi thử lại (Lần {attempt+1}/{max_retries})...", flush=True)
-                time.sleep(30)
+                if attempt < max_retries - 1:
+                    print(f"Google đang giới hạn tốc độ. Nghỉ 60 giây rồi thử lại (Lần {attempt+1}/{max_retries})...", flush=True)
+                    time.sleep(60)
+                else:
+                    print("Đã thử 5 lần nhưng vẫn bị quá tải.", flush=True)
+                    sys.exit(1)
             else:
                 traceback.print_exc()
                 sys.exit(1)
