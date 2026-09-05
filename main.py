@@ -72,7 +72,7 @@ def generate_report():
     "{last_memory}"
     
     QUY TRÌNH PHÂN TÍCH ĐÀO SÂU (BẮT BUỘC):
-    1. TẬP TRUNG: MỖI báo cáo CHỈ CHỌN 1 ĐẾN 2 VẤN ĐỀ để phân tích thật sâu. Không chạy lan man.
+    1. TRỌNG TÂM: MỖI báo cáo CHỈ CHỌN 1 ĐẾN 2 VẤN ĐỀ để phân tích thật sâu. Yêu cầu BẮT BUỘC là đánh mạnh vào việc phân tích các MẶT HÀNG / SẢN PHẨM (Ví dụ: Danh mục nào bán chạy nhất, sản phẩm nào bị rate thấp, mặt hàng nào phí ship vô lý...).
     2. ĐẶT GIẢ THUYẾT & KIỂM CHỨNG CHÉO: 
        - KHÔNG ĐƯỢC phép kết luận ngay chỉ từ 1 bảng dữ liệu duy nhất.
        - Khi phát hiện vấn đề ở Query 1 (VD: Doanh thu một nhóm hàng giảm, hoặc review kém), bạn PHẢI đặt ra các giả thuyết nguyên nhân.
