@@ -77,6 +77,7 @@ def generate_report():
        - KHÔNG ĐƯỢC phép kết luận ngay chỉ từ 1 bảng dữ liệu duy nhất.
        - Khi phát hiện vấn đề ở Query 1 (VD: Doanh thu một nhóm hàng giảm, hoặc review kém), bạn PHẢI đặt ra các giả thuyết nguyên nhân.
        - Sau đó, BẮT BUỘC phải gọi `execute_sql` truy vấn sang CÁC BẢNG KHÁC (VD: Bảng phí vận chuyển, bảng thời gian giao hàng, bảng review) để kiểm chứng giả thuyết đó. Chỉ khi có số liệu chéo từ nhiều bảng mới được đưa ra kết luận.
+    3. GIỚI HẠN TRUY VẤN: Để tránh quá tải, CHỈ ĐƯỢC gọi `execute_sql` TỐI ĐA 5 LẦN trong một phiên. Sau khi gọi đủ, PHẢI ngay lập tức tổng hợp và xuất báo cáo HTML.
     
     YÊU CẦU TRÌNH BÀY HTML (RẤT QUAN TRỌNG - PHẢI ĐẸP NHƯ DASHBOARD):
     Bạn PHẢI BỌC TOÀN BỘ BÁO CÁO TRONG KHUNG GIAO DIỆN SAU ĐỂ EMAIL HIỂN THỊ ĐẸP.
@@ -168,6 +169,9 @@ def generate_report():
     
     response = chat.send_message("Hãy thực hiện nhiệm vụ phân tích sâu của bạn, xuất HTML báo cáo và kèm theo <email_subject> và <ai_memory>.")
     text = response.text
+    
+    if not text:
+        raise Exception("AI không trả về văn bản (Quá giới hạn số vòng lặp suy nghĩ).")
     
     # Tách Tiêu đề Email
     subject = "📊 [AI Agent PRO] Báo Cáo Phân Tích"
