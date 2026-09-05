@@ -71,59 +71,82 @@ def generate_report():
     THÔNG TIN TỪ LẦN PHÂN TÍCH TRƯỚC (Dùng để kết nối/lead-in):
     "{last_memory}"
     
-    QUY TRÌNH PHÂN TÍCH BẮT BUỘC:
-    1. TẬP TRUNG SÂU: Chọn 1-2 vấn đề quan trọng để phân tích.
-    2. TÍNH LIÊN KẾT: Gọi `execute_sql` nhiều lần để đào sâu từ tổng quan đến chi tiết.
+    QUY TRÌNH PHÂN TÍCH ĐÀO SÂU (BẮT BUỘC):
+    1. TẬP TRUNG: MỖI báo cáo CHỈ CHỌN 1 ĐẾN 2 VẤN ĐỀ để phân tích thật sâu. Không chạy lan man.
+    2. ĐẶT GIẢ THUYẾT & KIỂM CHỨNG CHÉO: 
+       - KHÔNG ĐƯỢC phép kết luận ngay chỉ từ 1 bảng dữ liệu duy nhất.
+       - Khi phát hiện vấn đề ở Query 1 (VD: Doanh thu một nhóm hàng giảm, hoặc review kém), bạn PHẢI đặt ra các giả thuyết nguyên nhân.
+       - Sau đó, BẮT BUỘC phải gọi `execute_sql` truy vấn sang CÁC BẢNG KHÁC (VD: Bảng phí vận chuyển, bảng thời gian giao hàng, bảng review) để kiểm chứng giả thuyết đó. Chỉ khi có số liệu chéo từ nhiều bảng mới được đưa ra kết luận.
     
     YÊU CẦU TRÌNH BÀY HTML (RẤT QUAN TRỌNG - PHẢI ĐẸP NHƯ DASHBOARD):
-    Bạn PHẢI BỌC TOÀN BỘ BÁO CÁO TRONG KHUNG GIAO DIỆN SAU ĐỂ EMAIL HIỂN THỊ ĐẸP:
+    Bạn PHẢI BỌC TOÀN BỘ BÁO CÁO TRONG KHUNG GIAO DIỆN SAU ĐỂ EMAIL HIỂN THỊ ĐẸP.
+    Hãy chú ý cách đoạn (xuống dòng) rõ ràng, lề lối thoáng đãng, font chữ to rõ dễ đọc:
     
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f4f6; padding: 20px;">
-       <div style="max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden;">
-           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
-               <h1 style="margin:0; font-size: 28px; letter-spacing: 1px;">🚀 AI DATA DASHBOARD</h1>
-               <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Tự động phân tích & Trực quan hóa dữ liệu</p>
+    <div style="font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8f9fa; padding: 30px 15px;">
+       <div style="max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+           
+           <!-- HEADER -->
+           <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 35px 20px; text-align: center;">
+               <h1 style="margin:0; font-size: 28px; font-weight: 700; letter-spacing: 0.5px;">📊 AI DATA DASHBOARD</h1>
+               <p style="margin: 12px 0 0 0; opacity: 0.9; font-size: 16px;">Báo cáo Phân tích Dữ liệu Tự động</p>
            </div>
-           <div style="padding: 30px; line-height: 1.6; color: #333;">
-               <!-- PHẦN LEAD-IN Ở ĐÂY -->
+           
+           <!-- BODY -->
+           <div style="padding: 40px; line-height: 1.8; color: #334155; font-size: 16px;">
                
-               <!-- VỚI MỖI TRUY VẤN, LÀM ĐÚNG TRÌNH TỰ: -->
+               <!-- LEAD-IN / LỜI MỞ ĐẦU -->
+               <div style="margin-bottom: 35px;">
+                   [CHÈN LỜI MỞ ĐẦU VÀ DẪN DẮT Ở ĐÂY - NHỚ CHIA ĐOẠN RÕ RÀNG]
+               </div>
+               
+               <!-- VỚI MỖI TRUY VẤN, LÀM ĐÚNG TRÌNH TỰ SAU: -->
+               
                <!-- 1. CODE SQL -->
-               <div style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; overflow-x: auto; margin-bottom: 20px;">
+               <h4 style="color: #1e3a8a; margin-bottom: 10px; font-size: 15px;">Mã SQL Truy Vấn:</h4>
+               <div style="background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 8px; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; overflow-x: auto; margin-bottom: 25px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
                    [CHÈN CÂU LỆNH SQL VÀO ĐÂY]
                </div>
                
                <!-- 2. BẢNG DỮ LIỆU -->
-               <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                   <thead>
-                       <tr style="background-color: #f8fafc; color: #475569; text-align: left; border-bottom: 2px solid #e2e8f0;">
-                           <th style="padding: 12px 15px;">[TIÊU ĐỀ CỘT]</th>
-                       </tr>
-                   </thead>
-                   <tbody>
-                       <tr style="border-bottom: 1px solid #e2e8f0;">
-                           <td style="padding: 12px 15px;">[DỮ LIỆU]</td>
-                       </tr>
-                   </tbody>
-               </table>
-               
-               <!-- 3. BIỂU ĐỒ TRỰC QUAN (CSS BAR CHART) -->
-               <div style="margin-bottom: 30px; padding: 15px; border-left: 4px solid #764ba2; background: #f8fafc;">
-                   <h3 style="margin-top: 0; color: #475569;">📊 Trực quan hóa</h3>
-                   <!-- Vẽ Bar Chart bằng CSS, ví dụ: -->
-                   <div style="margin-bottom: 10px;">
-                       <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; font-size: 14px;">
-                           <span>Sản phẩm A</span><span>80%</span>
-                       </div>
-                       <div style="width: 100%; background-color: #e2e8f0; border-radius: 10px; height: 12px; overflow: hidden;">
-                           <div style="width: 80%; background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; border-radius: 10px;"></div>
-                       </div>
-                   </div>
+               <h4 style="color: #1e3a8a; margin-bottom: 10px; font-size: 15px;">Dữ Liệu Thô (Raw Data):</h4>
+               <div style="overflow-x: auto; margin-bottom: 30px;">
+                   <table style="width: 100%; border-collapse: collapse; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                       <thead>
+                           <tr style="background-color: #f1f5f9; color: #334155; text-align: left; border-bottom: 2px solid #cbd5e1;">
+                               <th style="padding: 15px;">[TIÊU ĐỀ CỘT]</th>
+                           </tr>
+                       </thead>
+                       <tbody>
+                           <tr style="border-bottom: 1px solid #e2e8f0; transition: background-color 0.2s;">
+                               <td style="padding: 15px; color: #475569;">[DỮ LIỆU]</td>
+                           </tr>
+                       </tbody>
+                   </table>
                </div>
                
-               <!-- 4. LỜI PHÂN TÍCH -->
-               <p style="font-size: 15px; color: #475569;">[CHÈN LỜI GIẢI THÍCH Ở ĐÂY]</p>
-               <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 30px 0;">
+               <!-- 3. BIỂU ĐỒ TRỰC QUAN (CSS BAR CHART) -->
+               <div style="margin-bottom: 35px; padding: 25px; border-left: 5px solid #3b82f6; background: #f8fafc; border-radius: 0 8px 8px 0;">
+                   <h3 style="margin-top: 0; color: #0f172a; font-size: 18px; margin-bottom: 20px;">📊 Trực quan hóa</h3>
+                   
+                   <!-- Vẽ Bar Chart bằng CSS, ví dụ: -->
+                   <div style="margin-bottom: 15px;">
+                       <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; font-size: 15px; color: #334155;">
+                           <span>Sản phẩm A</span><span>80%</span>
+                       </div>
+                       <div style="width: 100%; background-color: #e2e8f0; border-radius: 10px; height: 14px; overflow: hidden;">
+                           <div style="width: 80%; background: linear-gradient(90deg, #3b82f6, #2563eb); height: 100%; border-radius: 10px;"></div>
+                       </div>
+                   </div>
+                   
+               </div>
+               
+               <!-- 4. LỜI PHÂN TÍCH CHI TIẾT -->
+               <h4 style="color: #1e3a8a; margin-bottom: 10px; font-size: 16px;">Phân Tích & Nhận Định:</h4>
+               <p style="font-size: 16px; color: #334155; margin-bottom: 35px; line-height: 1.8;">
+                   [CHÈN LỜI GIẢI THÍCH, PHÂN TÍCH CHI TIẾT Ở ĐÂY. LƯU Ý PHÂN ĐOẠN RÕ RÀNG.]
+               </p>
+               
+               <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 40px 0;">
            </div>
        </div>
     </div>
