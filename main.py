@@ -66,24 +66,70 @@ def generate_report():
     
     system_instruction = f"""
     Bạn là một Chuyên gia Phân tích Dữ liệu Siêu cấp.
-    Bạn có công cụ `execute_sql` để truy vấn database MySQL. Các bảng: customers, geolocation, order_items, orders, payments, products, reviews, sellers, category_translation.
+    Bạn có công cụ `execute_sql` để tự do truy vấn database MySQL. Các bảng: customers, geolocation, order_items, orders, payments, products, reviews, sellers, category_translation.
     
     THÔNG TIN TỪ LẦN PHÂN TÍCH TRƯỚC (Dùng để kết nối/lead-in):
     "{last_memory}"
     
     QUY TRÌNH PHÂN TÍCH BẮT BUỘC:
-    1. TẬP TRUNG SÂU: MỖI báo cáo CHỈ CHỌN 1 ĐẾN 2 VẤN ĐỀ để phân tích thật sâu. Không lan man nhiều bảng rời rạc.
-    2. TÍNH LIÊN KẾT: Thông tin và dữ liệu giữa các câu query phải có sự liên hệ logic (Ví dụ: Query 1 tìm ra nhóm SP lỗi -> Query 2 phải phân tích chi tiết vào nhóm SP đó).
+    1. TẬP TRUNG SÂU: Chọn 1-2 vấn đề quan trọng để phân tích.
+    2. TÍNH LIÊN KẾT: Gọi `execute_sql` nhiều lần để đào sâu từ tổng quan đến chi tiết.
     
-    YÊU CẦU TRÌNH BÀY HTML (CỰC KỲ QUAN TRỌNG):
-    - Lead-in: Luôn mở đầu bằng cách nhắc lại 1-2 câu về báo cáo trước để tạo sự liền mạch.
-    - TRÌNH TỰ BẮT BUỘC KHI XUẤT DỮ LIỆU (Với mỗi lần query):
-        + BƯỚC A: In ra câu lệnh SQL bạn đã dùng (trong thẻ <pre style="background:#eee; padding:10px; border-radius:5px;">).
-        + BƯỚC B: BẮT BUỘC hiển thị BẢNG DỮ LIỆU GỐC (Dùng thẻ <table>, có kẻ viền rõ ràng). Bảng này phải giống hệt như khi chạy thực tế trên MySQL.
-        + BƯỚC C: Phân tích bảng đó. CHỈ NẾU THỰC SỰ CẦN THIẾT thì mới vẽ THÊM 1 biểu đồ thanh ngang (bằng thẻ <div>). KHÔNG lạm dụng vẽ quá nhiều biểu đồ hay hiệu ứng animation rườm rà. Tính chính xác và bảng số liệu thực tế là ưu tiên số 1.
+    YÊU CẦU TRÌNH BÀY HTML (RẤT QUAN TRỌNG - PHẢI ĐẸP NHƯ DASHBOARD):
+    Bạn PHẢI BỌC TOÀN BỘ BÁO CÁO TRONG KHUNG GIAO DIỆN SAU ĐỂ EMAIL HIỂN THỊ ĐẸP:
+    
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f3f4f6; padding: 20px;">
+       <div style="max-width: 850px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden;">
+           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
+               <h1 style="margin:0; font-size: 28px; letter-spacing: 1px;">🚀 AI DATA DASHBOARD</h1>
+               <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Tự động phân tích & Trực quan hóa dữ liệu</p>
+           </div>
+           <div style="padding: 30px; line-height: 1.6; color: #333;">
+               <!-- PHẦN LEAD-IN Ở ĐÂY -->
+               
+               <!-- VỚI MỖI TRUY VẤN, LÀM ĐÚNG TRÌNH TỰ: -->
+               <!-- 1. CODE SQL -->
+               <div style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; overflow-x: auto; margin-bottom: 20px;">
+                   [CHÈN CÂU LỆNH SQL VÀO ĐÂY]
+               </div>
+               
+               <!-- 2. BẢNG DỮ LIỆU -->
+               <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                   <thead>
+                       <tr style="background-color: #f8fafc; color: #475569; text-align: left; border-bottom: 2px solid #e2e8f0;">
+                           <th style="padding: 12px 15px;">[TIÊU ĐỀ CỘT]</th>
+                       </tr>
+                   </thead>
+                   <tbody>
+                       <tr style="border-bottom: 1px solid #e2e8f0;">
+                           <td style="padding: 12px 15px;">[DỮ LIỆU]</td>
+                       </tr>
+                   </tbody>
+               </table>
+               
+               <!-- 3. BIỂU ĐỒ TRỰC QUAN (CSS BAR CHART) -->
+               <div style="margin-bottom: 30px; padding: 15px; border-left: 4px solid #764ba2; background: #f8fafc;">
+                   <h3 style="margin-top: 0; color: #475569;">📊 Trực quan hóa</h3>
+                   <!-- Vẽ Bar Chart bằng CSS, ví dụ: -->
+                   <div style="margin-bottom: 10px;">
+                       <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; font-size: 14px;">
+                           <span>Sản phẩm A</span><span>80%</span>
+                       </div>
+                       <div style="width: 100%; background-color: #e2e8f0; border-radius: 10px; height: 12px; overflow: hidden;">
+                           <div style="width: 80%; background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; border-radius: 10px;"></div>
+                       </div>
+                   </div>
+               </div>
+               
+               <!-- 4. LỜI PHÂN TÍCH -->
+               <p style="font-size: 15px; color: #475569;">[CHÈN LỜI GIẢI THÍCH Ở ĐÂY]</p>
+               <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 30px 0;">
+           </div>
+       </div>
+    </div>
     
     BẮT BUỘC KÈM THEO MEMORY:
-    Ở DƯỚI CÙNG của báo cáo, viết một tóm tắt kết luận ngắn (2-3 câu) về những gì vừa tìm được, đặt trong thẻ <ai_memory>...</ai_memory> để làm vốn cho lần chạy sau.
+    Ở DƯỚI CÙNG của báo cáo (nằm ngoài giao diện Dashboard), viết một tóm tắt ngắn (2-3 câu) đặt trong thẻ <ai_memory>...</ai_memory>.
     """
     
     chat = client.chats.create(
