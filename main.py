@@ -139,9 +139,10 @@ if __name__ == "__main__":
             break
         except Exception as e:
             print(f"CRITICAL ERROR ENCOUNTERED: {e}", flush=True)
-            if "503" in str(e) or "UNAVAILABLE" in str(e):
-                print(f"Máy chủ Google đang bận. Đợi 15 giây rồi thử lại (Lần {attempt+1}/{max_retries})...", flush=True)
-                time.sleep(15)
+            error_str = str(e)
+            if "503" in error_str or "UNAVAILABLE" in error_str or "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                print(f"Google đang giới hạn tốc độ. Nghỉ 30 giây rồi thử lại (Lần {attempt+1}/{max_retries})...", flush=True)
+                time.sleep(30)
             else:
                 traceback.print_exc()
                 sys.exit(1)
