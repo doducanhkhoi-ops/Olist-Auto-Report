@@ -7,74 +7,128 @@ from google import genai
 from google.genai import types
 import traceback
 import sys
-# ĐÂY LÀ CÔNG CỤ (TOOL) MÀ AI SẼ TỰ ĐỘNG GỌI ĐỂ TÌM KIẾM DỮ LIỆU
+import re
+
+def get_db_connection():
+    return mysql.connector.connect(
+        host=os.environ['DB_HOST'],
+        port=18064,
+        user=os.environ['DB_USER'],
+        password=os.environ['DB_PASS'],
+        database="defaultdb"
+    )
+
 def execute_sql(query: str) -> str:
-    print(f"Agent đang chạy lệnh SQL: {query}", flush=True)
+    print(f"Agent đang chạy lệnh SQL:\n{query}\n", flush=True)
     try:
-        conn = mysql.connector.connect(
-            host=os.environ['DB_HOST'],
-            port=18064,
-            user=os.environ['DB_USER'],
-            password=os.environ['DB_PASS'],
-            database="defaultdb"
-        )
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query)
         data = cursor.fetchall()
+        conn.commit()
         conn.close()
-        # Giới hạn số lượng ký tự trả về để AI không bị ngộp dữ liệu
-        return str(data)[:4000]
+        return str(data)[:5000]
     except Exception as e:
         return f"Lỗi truy vấn SQL: {e}"
+
+def get_and_update_memory(new_memory=None):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ai_memory (
+                id INT AUTO_INCREMENT PRIMARY KEY, 
+                memory_text TEXT, 
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        if new_memory:
+            cursor.execute("INSERT INTO ai_memory (memory_text) VALUES (%s)", (new_memory,))
+            conn.commit()
+            conn.close()
+            return True
+            
+        cursor.execute("SELECT memory_text FROM ai_memory ORDER BY id DESC LIMIT 1")
+        row = cursor.fetchone()
+        conn.close()
+        return row['memory_text'] if row else "Đây là báo cáo đầu tiên. Hãy phân tích tổng quan."
+    except Exception as e:
+        print(f"Lỗi memory: {e}")
+        return "Không thể đọc memory."
+
 def generate_report():
-    print("Khởi động AI Agent tự hành...", flush=True)
+    print("Khởi động AI Agent PRO...", flush=True)
     client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
     
-    # KỊCH BẢN DÀNH CHO AI AGENT
-    system_instruction = """
-    Bạn là một Chuyên gia Phân tích Dữ liệu độc lập.
-    Bạn có công cụ `execute_sql` để tự do truy vấn database MySQL (các bảng: customers, geolocation, order_items, orders, payments, products, reviews, sellers, category_translation).
+    # Đọc trí nhớ từ lần chạy trước
+    last_memory = get_and_update_memory()
+    print(f"Trí nhớ lần trước: {last_memory}", flush=True)
     
-    Quy trình của bạn bắt buộc phải trải qua các bước sau:
-    1. Nghĩ ra một chủ đề phân tích ngẫu nhiên thú vị (VD: Top 5 sản phẩm bán chạy nhất bị đánh giá tệ, Phân tích doanh thu theo năm, Phí vận chuyển của các khu vực...).
-    2. Chạy ít nhất 1 lệnh SQL để lấy cái nhìn tổng quan (BẮT BUỘC dùng công cụ execute_sql).
-    3. Từ dữ liệu tổng quan đó, tìm một điểm bất thường hoặc thú vị.
-    4. Chạy thêm 1 lệnh SQL nữa để "đào sâu" tìm nguyên nhân của điểm bất thường đó.
-    5. Sau khi thu thập đủ dữ liệu 2 vòng, viết báo cáo cuối cùng.
+    system_instruction = f"""
+    Bạn là một Chuyên gia Phân tích Dữ liệu Siêu cấp.
+    Bạn có công cụ `execute_sql` để tự do truy vấn database MySQL. Các bảng: customers, geolocation, order_items, orders, payments, products, reviews, sellers, category_translation.
     
-    YÊU CẦU BÁO CÁO:
-    - Trình bày hoàn toàn bằng mã HTML tuyệt đẹp, chuyên nghiệp.
-    - Dùng CSS inline: Bảng (table) phải có đường viền (border), đổ màu nền xen kẽ (striped), in đậm tiêu đề.
-    - Bắt buộc phải chia các phần: "Chủ đề phân tích", "Dữ liệu tổng quan (chèn bảng)", "Phát hiện bất thường", "Phân tích sâu nguyên nhân (chèn bảng)", "Kết luận".
-    - KHÔNG dùng thẻ markdown ```html. Chỉ trả về HTML thuần túy để dán thẳng vào Email.
+    THÔNG TIN TỪ LẦN PHÂN TÍCH TRƯỚC (Dùng để kết nối/lead-in):
+    "{last_memory}"
+    
+    QUY TRÌNH PHÂN TÍCH BẮT BUỘC:
+    1. Chủ đề: Chọn một chủ đề SÂU (kế thừa từ báo cáo trước hoặc tìm hướng mới lạ).
+    2. Truy vấn: Bắt buộc gọi `execute_sql` nhiều lần để lấy số liệu, đào sâu (drill-down) tìm nguyên nhân rễ.
+    3. Báo cáo: Viết báo cáo HTML chuyên nghiệp gửi Giám đốc.
+    
+    YÊU CẦU TRÌNH BÀY HTML:
+    - Lead-in: Mở đầu bằng việc nhắc lại tóm tắt báo cáo lần trước và dẫn dắt lý do chọn chủ đề lần này.
+    - Công khai SQL: Ngay phía trên MỖI bảng dữ liệu/biểu đồ, BẮT BUỘC in ra nguyên văn câu lệnh SQL bạn đã dùng (đặt trong thẻ <pre style="background:#eee; padding:10px; border-radius:5px;">) để sếp có thể tự copy test.
+    - Biểu đồ Trực quan (RẤT QUAN TRỌNG): Vì email chặn Javascript, HÃY VẼ BIỂU ĐỒ THANH NGANG BẰNG HTML/CSS. 
+      Ví dụ vẽ biểu đồ Bar Chart bằng thẻ <div>:
+      <div style="margin-bottom: 5px;">
+        <div>Sản phẩm A (80%)</div>
+        <div style="width: 80%; background-color: #4CAF50; height: 20px;"></div>
+      </div>
+    - CSS: Dùng CSS inline lộng lẫy, màu sắc chuyên nghiệp.
+    
+    BẮT BUỘC KÈM THEO MEMORY:
+    Ở DƯỚI CÙNG của báo cáo, bạn PHẢI viết một tóm tắt kết luận ngắn (2-3 câu) về những gì vừa tìm được, đặt trong thẻ <ai_memory>...</ai_memory>.
+    Ví dụ: <ai_memory>Đã phân tích phí ship của SP A. Lần tới nên xem xét khu vực có phí ship cao nhất.</ai_memory>
+    Hệ thống sẽ cắt thẻ này ra và lưu lại cho bạn vào lần chạy sau.
     """
     
-    # Kích hoạt tính năng Automatic Function Calling để AI tự động đàm thoại với công cụ
     chat = client.chats.create(
-        model='gemini-3.5-flash-lite',
+        model='gemini-3.7-flash',
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
             tools=[execute_sql],
-            temperature=0.7,
+            temperature=0.6,
         )
     )
     
-    print("Agent đang suy nghĩ và truy vấn Database...", flush=True)
-    # Kích hoạt Agent
-    response = chat.send_message("Hãy thực hiện nhiệm vụ phân tích của bạn cho ngày hôm nay và trả về HTML báo cáo cuối cùng.")
+    response = chat.send_message("Hãy thực hiện nhiệm vụ phân tích sâu của bạn, xuất HTML báo cáo và kèm theo <ai_memory>.")
+    text = response.text
     
-    return response.text
+    # Cắt thẻ memory để lưu lại
+    memory_match = re.search(r'<ai_memory>(.*?)</ai_memory>', text, re.DOTALL)
+    if memory_match:
+        new_memory = memory_match.group(1).strip()
+        print(f"Lưu trí nhớ mới: {new_memory}", flush=True)
+        get_and_update_memory(new_memory)
+        # Xóa thẻ memory khỏi HTML gửi đi
+        text = re.sub(r'<ai_memory>.*?</ai_memory>', '', text, flags=re.DOTALL)
+        
+    return text.strip()
+
 def send_email(html_content):
     print("Đang đóng gói Email...", flush=True)
     msg = MIMEMultipart()
     msg['From'] = os.environ['EMAIL_USER']
     msg['To'] = os.environ['EMAIL_USER']
-    msg['Subject'] = "🚀 [AI Agent] Báo Cáo Phân Tích Database Tự Động"
+    msg['Subject'] = "📊 [AI Agent PRO] Báo Cáo Phân Tích Chuyên Sâu"
     
     if html_content.startswith("```html"):
         html_content = html_content[7:]
     if html_content.endswith("```"):
         html_content = html_content[:-3]
+
     msg.attach(MIMEText(html_content, 'html'))
     
     server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -83,6 +137,7 @@ def send_email(html_content):
     server.send_message(msg)
     server.quit()
     print("Email sent successfully!", flush=True)
+
 if __name__ == "__main__":
     import time
     max_retries = 5
@@ -91,7 +146,7 @@ if __name__ == "__main__":
             report = generate_report()
             send_email(report)
             print("Done!", flush=True)
-            break # Thành công thì thoát vòng lặp
+            break
         except Exception as e:
             print(f"CRITICAL ERROR ENCOUNTERED: {e}", flush=True)
             if "503" in str(e) or "UNAVAILABLE" in str(e):
@@ -99,4 +154,4 @@ if __name__ == "__main__":
                 time.sleep(15)
             else:
                 traceback.print_exc()
-                sys.exit(1) # Lỗi khác thì báo đỏ
+                sys.exit(1)
