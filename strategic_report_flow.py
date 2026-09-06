@@ -28,6 +28,14 @@ GMAIL_APP_PASSWORD = get_env_or_default(["GMAIL_APP_PASSWORD"], "wkof rxcj jshh 
 EMAIL_TO = get_env_or_default(["EMAIL_TO"], "doducanhkhoi.bec@gmail.com")
 
 MYSQL_HOST = get_env_or_default(["MYSQL_HOST", "DB_HOST"], "localhost")
+if "://" in MYSQL_HOST:
+    MYSQL_HOST = MYSQL_HOST.split("://")[-1]
+if ":" in MYSQL_HOST:
+    parts = MYSQL_HOST.split(":")
+    MYSQL_HOST = parts[0]
+    if not port_raw:
+        port_raw = parts[1].split("/")[0]
+MYSQL_HOST = MYSQL_HOST.strip().rstrip("/")
 
 port_raw = get_env_or_default(["MYSQL_PORT", "DB_PORT"], None)
 if port_raw:
