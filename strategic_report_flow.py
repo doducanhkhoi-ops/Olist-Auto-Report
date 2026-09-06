@@ -16,15 +16,31 @@ import mysql.connector
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # ============== CẤU HÌNH (HỖ TRỢ CẢ LOCAL VÀ GITHUB ACTIONS / CLOUD) ==============
-GMAIL_USER = os.getenv("GMAIL_USER", "doducanhkhoi.bec@gmail.com")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "wkof rxcj jshh zjql")
-EMAIL_TO = os.getenv("EMAIL_TO", "doducanhkhoi.bec@gmail.com")
+def get_env_or_default(var_names, default):
+    for name in var_names:
+        val = os.getenv(name)
+        if val is not None and str(val).strip() != "":
+            return str(val).strip()
+    return default
 
-MYSQL_HOST = os.getenv("MYSQL_HOST", os.getenv("DB_HOST", "localhost"))
-MYSQL_PORT = int(os.getenv("MYSQL_PORT", os.getenv("DB_PORT", 3306)))
-MYSQL_USER = os.getenv("MYSQL_USER", os.getenv("DB_USER", "root"))
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", os.getenv("DB_PASSWORD", "@Kk1332006"))
-MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", os.getenv("DB_NAME", "olist_raw"))
+GMAIL_USER = get_env_or_default(["GMAIL_USER"], "doducanhkhoi.bec@gmail.com")
+GMAIL_APP_PASSWORD = get_env_or_default(["GMAIL_APP_PASSWORD"], "wkof rxcj jshh zjql")
+EMAIL_TO = get_env_or_default(["EMAIL_TO"], "doducanhkhoi.bec@gmail.com")
+
+MYSQL_HOST = get_env_or_default(["MYSQL_HOST", "DB_HOST"], "localhost")
+
+port_raw = get_env_or_default(["MYSQL_PORT", "DB_PORT"], None)
+if port_raw:
+    try:
+        MYSQL_PORT = int(port_raw)
+    except (ValueError, TypeError):
+        MYSQL_PORT = 18064 if "aivencloud" in MYSQL_HOST else 3306
+else:
+    MYSQL_PORT = 18064 if "aivencloud" in MYSQL_HOST else 3306
+
+MYSQL_USER = get_env_or_default(["MYSQL_USER", "DB_USER"], "avnadmin" if "aivencloud" in MYSQL_HOST else "root")
+MYSQL_PASSWORD = get_env_or_default(["MYSQL_PASSWORD", "DB_PASSWORD", "DB_PASS"], "@Kk1332006")
+MYSQL_DATABASE = get_env_or_default(["MYSQL_DATABASE", "DB_NAME"], "defaultdb" if "aivencloud" in MYSQL_HOST else "olist_raw")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(BASE_DIR, "strategic_report_state.json")
